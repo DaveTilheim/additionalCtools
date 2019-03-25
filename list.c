@@ -4,6 +4,12 @@
 #include <string.h>
 #include "list.h"
 
+List *(*push)(List *, void*) = &add_begin;
+List *(*pushn)(List *, unsigned long, ...) = &add_nbegin;
+List *(*append)(List *, void*) = &add_end;
+List *(*appendn)(List *, unsigned long, ...) = &add_nend;
+List *(*pop)(List *) = &free_first;
+List *(*popd)(List *) = &freed_first;
 
 List *new_list(unsigned long n, ...)
 {
@@ -981,6 +987,16 @@ void mix_list(List *L)
 		permutl(L, rand()%len, rand()%len);
 	}
 }
+
+
+
+
+
+
+
+
+
+
 
 
 

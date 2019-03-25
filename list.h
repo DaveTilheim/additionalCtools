@@ -13,6 +13,13 @@ struct List_t
 typedef struct List_t List;
 typedef struct List_t Cell;
 
+List *(*push)(List *, void*);
+List *(*pushn)(List *, unsigned long, ...);
+List *(*append)(List *, void*);
+List *(*appendn)(List *, unsigned long, ...);
+List *(*pop)(List *);
+List *(*popd)(List *);
+
 unsigned long len_list(List*);
 List *new_list(unsigned long, ...);
 List *empty_list();
