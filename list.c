@@ -52,7 +52,7 @@ static Cell *create_cell(void *data)
 	return cell;
 }
 
-List *add_int(List *L, long val)
+List * _implicit_alloc_data add_int(List *L, long val)
 {
 	L = add_end(L, malloc(8));
 	*(long*)get_last(L) = (long)val;
@@ -60,7 +60,7 @@ List *add_int(List *L, long val)
 	return L;
 }
 
-List *add_nint(List *L, unsigned long n, ...)
+List * _implicit_alloc_data add_nint(List *L, unsigned long n, ...)
 {
 	va_list ptr;
 	va_start(ptr, n);
@@ -74,7 +74,7 @@ List *add_nint(List *L, unsigned long n, ...)
 	return L;
 }
 
-List *add_str(List *L, char *str)
+List * _implicit_alloc_data add_str(List *L, char *str)
 {
 	L = add_end(L, malloc(strlen(str)));
 	strcpy(get_last(L), str);
@@ -82,7 +82,7 @@ List *add_str(List *L, char *str)
 	return L;
 }
 
-List *add_nstr(List *L, unsigned long n, ...)
+List * _implicit_alloc_data add_nstr(List *L, unsigned long n, ...)
 {
 	va_list ptr;
 	va_start(ptr, n);
@@ -96,7 +96,7 @@ List *add_nstr(List *L, unsigned long n, ...)
 	return L;
 }
 
-List *add_double(List *L, double val)
+List * _implicit_alloc_data add_double(List *L, double val)
 {
 	L = add_end(L, malloc(8));
 	*(double*)get_last(L) = (double)val;
@@ -104,7 +104,7 @@ List *add_double(List *L, double val)
 	return L;
 }
 
-List *add_ndouble(List *L, unsigned long n, ...)
+List * _implicit_alloc_data add_ndouble(List *L, unsigned long n, ...)
 {
 	va_list ptr;
 	va_start(ptr, n);
@@ -234,7 +234,7 @@ void set_first(List *L, void *data)
 	L->data = data;
 }
 
-void setd_first(List *L, void *data)
+void _implicit_free_data setd_first(List *L, void *data)
 {
 	free(L->data);
 	L->data = data;
@@ -251,7 +251,7 @@ void set_last(List *L, void *data)
 	L->data = data;
 }
 
-void setd_last(List *L, void *data)
+void _implicit_free_data setd_last(List *L, void *data)
 {
 	if(!L)
 		return;
@@ -288,7 +288,7 @@ void set_at(List *L, unsigned long i, void *data)
 	L->data = data;
 }
 
-void setd_at(List *L, unsigned long i, void *data)
+void _implicit_free_data setd_at(List *L, unsigned long i, void *data)
 {
 	int j;
 	if(i == 0)
@@ -413,7 +413,7 @@ List *free_at(List *L, unsigned long i)
 }
 
 
-List *freed_first(List* L)
+List * _implicit_free_data freed_first(List* L)
 {
 	if(!L)
 		return NULL;
@@ -424,7 +424,7 @@ List *freed_first(List* L)
 	return p;
 }
 
-List *freed_last(List *L)
+List * _implicit_free_data freed_last(List *L)
 {
 	if(!L)
 		return NULL;
@@ -442,7 +442,7 @@ List *freed_last(List *L)
 	return L;
 }
 
-List *freed_at(List *L, unsigned long i)
+List * _implicit_free_data freed_at(List *L, unsigned long i)
 {
 	int j;
 	List *prec, *next, *p=L;
@@ -485,7 +485,7 @@ List *free_list(List* L)
 	return NULL;
 }
 
-List *freed_list(List* L)
+List * _implicit_free_data freed_list(List* L)
 {
 	if(!L)
 	{
@@ -623,7 +623,7 @@ List *split_chrstr(List *L, char *str, char target)
 	return L;
 }
 
-List *splitd_chrstr(List *L, char *str, char target)
+List * _implicit_alloc_data splitd_chrstr(List *L, char *str, char target)
 {
 	char *ptr = NULL;
 	char *beg = str;
@@ -672,7 +672,7 @@ List *split_strstr(List *L, char *str, char *target)
 	return L;
 }
 
-List *splitd_strstr(List *L, char *str, char *target)
+List * _implicit_alloc_data splitd_strstr(List *L, char *str, char *target)
 {
 	char *ptr = NULL;
 	char *beg = str, *tmp=0, *tmp2=0;
@@ -735,7 +735,7 @@ List *split_chrstrex(List *L, char *str, char target)
 	return L;
 }
 
-List *splitd_chrstrex(List *L, char *str, char target)
+List * _implicit_alloc_data splitd_chrstrex(List *L, char *str, char target)
 {
 	L = split_chrstr(L, str, target);
 	int i, s, j, k, ok=0;
@@ -793,7 +793,7 @@ List *split_strstrex(List *L, char *str, char *target)
 	return L;
 }
 
-List *splitd_strstrex(List *L, char *str, char *target)
+List * _implicit_alloc_data splitd_strstrex(List *L, char *str, char *target)
 {
 	L = splitd_strstr(L, str, target);
 	int i, s, j, k, ok=0;
