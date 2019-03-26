@@ -143,7 +143,15 @@ void stripctrl_str(char *str)
 	replace_str(str, "\b", "");
 }
 
-
+void binstr(char *dest, size_t nbytes, void *data)
+{
+	int i, j, k=0;
+	for(i = nbytes-1; i >= 0; i--)
+	{
+		for(j = 0; j < 8; j++)
+			dest[k++] = '0'+(((*(char*)(data+i)) >> (8-j-1)) & 1);
+	}
+}
 
 
 

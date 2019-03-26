@@ -4,6 +4,13 @@
 #include <string.h>
 #include "list.h"
 
+struct List_t
+{
+	void *data;
+	struct List_t *next;
+};
+
+
 List *(*push)(List *, void*) = &add_first;
 List *(*pushn)(List *, unsigned long, ...) = &add_nfirst;
 List *(*append)(List *, void*) = &add_last;

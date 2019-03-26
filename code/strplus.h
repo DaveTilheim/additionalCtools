@@ -16,5 +16,7 @@ void replace_str(char *, char *, char *);
 void replace_chr(char *, char, char);
 void strip_str(char *, char *);
 void stripctrl_str(char *);
+#define bins(dest, value) binstr(dest, sizeof(value), &value)
+void binstr(char *, size_t, void *);
 
 #endif

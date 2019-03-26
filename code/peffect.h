@@ -13,6 +13,11 @@ typedef unsigned long Millsec;
 void print_delay(const char *, Millsec);
 void print_delay_max(const char *, Millsec);
 
+#define printb(var) print_bin(sizeof(var), &var)
+void print_bin(const size_t, const void*);
+void print_bini(const size_t, const int);
+void print_binf(const float);
+void print_bind(const double);
 
 typedef enum
 {

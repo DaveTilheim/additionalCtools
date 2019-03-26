@@ -4,13 +4,7 @@
 #define _implicit_alloc_data
 #define _implicit_free_data
 
-struct List_t
-{
-	void *data;
-	struct List_t *next;
-};
-
-typedef struct List_t List;
+typedef struct List_t List, *pList;
 typedef struct List_t Cell;
 
 List *(*push)(List *, void*);
