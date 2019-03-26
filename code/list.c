@@ -4,12 +4,14 @@
 #include <string.h>
 #include "list.h"
 
-List *(*push)(List *, void*) = &add_begin;
-List *(*pushn)(List *, unsigned long, ...) = &add_nbegin;
-List *(*append)(List *, void*) = &add_end;
-List *(*appendn)(List *, unsigned long, ...) = &add_nend;
+List *(*push)(List *, void*) = &add_first;
+List *(*pushn)(List *, unsigned long, ...) = &add_nfirst;
+List *(*append)(List *, void*) = &add_last;
+List *(*appendn)(List *, unsigned long, ...) = &add_nlast;
 List *(*pop)(List *) = &free_first;
 List *(*popd)(List *) = &freed_first;
+
+static Cell *create_cell(void *);
 
 List *new_list(unsigned long n, ...)
 {
@@ -20,11 +22,215 @@ List *new_list(unsigned long n, ...)
 	va_start(ptr, n);
 	for(int i = 0; i < n; i++)
 	{
-		L = add_end(L, va_arg(ptr, void*));
+		L = add_last(L, va_arg(ptr, void*));
 	}
 	va_end(ptr);
 
 	return L;
+}
+
+List * _implicit_alloc_data new_listcpy(size_t nbytes, unsigned long n, ...)
+{
+	if(!n)
+		return empty_list();
+	List *L = empty_list();
+	va_list ptr;
+	va_start(ptr, n);
+	for(int i = 0; i < n; i++)
+	{
+		L = add_cpylast(L, nbytes, va_arg(ptr, void*));
+	}
+	va_end(ptr);
+
+	return L;
+}
+
+List * _implicit_alloc_data add_cpyfirst(List *L, size_t nbytes, void* data)
+{
+	Cell *firstCell = create_cell(malloc(nbytes));
+	if(!firstCell)
+	{
+		return L;
+	}
+	memcpy(firstCell->data, data, nbytes);
+	firstCell->next = L;
+
+	return firstCell;
+}
+
+List * _implicit_alloc_data add_cpylast(List *L, size_t nbytes, void* data)
+{
+	if(!L)
+		return add_cpyfirst(L, nbytes, data);
+	List *p = L;
+	Cell *endCell = create_cell(malloc(nbytes));
+	if(!endCell)
+	{
+		return L;
+	}
+	memcpy(endCell->data, data, nbytes);
+	while(p->next)
+	{
+		p = p->next;
+	}
+	p->next = endCell;
+
+	return L;
+}
+
+List * _implicit_alloc_data add_cpyat(List *L, size_t nbytes, void* data, unsigned long i)
+{
+	unsigned long j;
+	List *cur = L;
+	List *pshift;
+	if(i == 0)
+	{
+		return add_cpyfirst(L, nbytes, data);
+	}
+	if(i == len_list(L))
+	{
+		return add_cpylast(L, nbytes, data);
+	}
+	if(i > len_list(L))
+	{
+		fprintf(stderr, "\033[91mlist index out of band error: %lu > %lu\033[0m\n", i, len_list(L)-1);
+		return L;
+	}
+	for(j = 1; j < i; j++)
+	{
+		cur = cur->next;
+	}
+	Cell *cell = create_cell(malloc(nbytes));
+	if(!cell)
+	{
+		return L;
+	}
+	memcpy(cell->data, data, nbytes);
+	pshift = cur->next;
+	cell->next = pshift;
+	cur->next = cell;
+
+	return L;
+}
+
+List * _implicit_alloc_data add_ncpyfirst(List *L, size_t nbytes, unsigned long n, ...)
+{
+	va_list ptr;
+	va_start(ptr, n);
+	for(unsigned long i = 0; i < n; i++)
+	{
+		L = add_cpyfirst(L, nbytes, va_arg(ptr, void*));
+	}
+	va_end(ptr);
+
+	return L;
+}
+
+List * _implicit_alloc_data add_ncpylast(List *L, size_t nbytes, unsigned long n, ...)
+{
+	va_list ptr;
+	va_start(ptr, n);
+	for(unsigned long i = 0; i < n; i++)
+	{
+		L = add_cpylast(L, nbytes, va_arg(ptr, void*));
+	}
+	va_end(ptr);
+
+	return L;
+}
+
+List * _implicit_alloc_data add_ncpyat(List *L, size_t nbytes, unsigned long i, unsigned long n, ...)
+{
+	va_list ptr;
+	va_start(ptr, n);
+	for(unsigned long j = 0; j < n; j++)
+	{
+		L = add_cpyat(L, nbytes, va_arg(ptr, void*), j+i);
+	}
+	va_end(ptr);
+
+	return L;
+}
+
+void _implicit_alloc_data set_cpyfirst(List *L, size_t nbytes, void *data)
+{
+	memcpy(L->data, data, nbytes);
+}
+
+void _implicit_alloc_data set_cpylast(List *L, size_t nbytes, void *data)
+{
+	if(!L)
+		return;
+	while(L->next)
+	{
+		L = L->next;
+	}
+	memcpy(L->data, data, nbytes);
+}
+
+void _implicit_alloc_data set_cpyat(List *L, size_t nbytes, unsigned long i, void *data)
+{
+	int j;
+	if(i == 0)
+	{
+		set_cpyfirst(L, nbytes, data);
+	}
+	if(i == len_list(L)-1)
+	{
+		set_cpylast(L, nbytes, data);
+	}
+	if(i >= len_list(L))
+	{
+		fprintf(stderr, "\033[91mlist index out of band error: %lu > %lu\033[0m\n", i, len_list(L)-1);
+		return;
+	}
+	for(j = 0; j < i; j++)
+	{
+		L = L->next;
+	}
+	memcpy(L->data, data, nbytes);
+}
+
+void _implicit_alloc_data _implicit_free_data setd_cpyfirst(List *L, size_t nbytes, void *data)
+{
+	free(L->data);
+	memcpy(L->data, data, nbytes);
+}
+
+void _implicit_alloc_data _implicit_free_data setd_cpylast(List *L, size_t nbytes, void *data)
+{
+	if(!L)
+		return;
+	while(L->next)
+	{
+		L = L->next;
+	}
+	free(L->data);
+	memcpy(L->data, data, nbytes);
+}
+
+void _implicit_alloc_data _implicit_free_data setd_cpyat(List *L, size_t nbytes, unsigned long i, void *data)
+{
+	int j;
+	if(i == 0)
+	{
+		setd_cpyfirst(L, nbytes, data);
+	}
+	if(i == len_list(L)-1)
+	{
+		setd_cpylast(L, nbytes, data);
+	}
+	if(i >= len_list(L))
+	{
+		fprintf(stderr, "\033[91mlist index out of band error: %lu > %lu\033[0m\n", i, len_list(L)-1);
+		return;
+	}
+	for(j = 0; j < i; j++)
+	{
+		L = L->next;
+	}
+	free(L->data);
+	memcpy(L->data, data, nbytes);
 }
 
 List *empty_list()
@@ -43,7 +249,6 @@ unsigned long len_list(List* L)
 	return i;
 }
 
-static Cell *create_cell(void *);
 static Cell *create_cell(void *data)
 {
 	Cell *cell = (Cell*)malloc(sizeof(Cell));
@@ -60,7 +265,7 @@ static Cell *create_cell(void *data)
 
 List * _implicit_alloc_data add_int(List *L, long val)
 {
-	L = add_end(L, malloc(8));
+	L = add_last(L, malloc(8));
 	*(long*)get_last(L) = (long)val;
 
 	return L;
@@ -82,7 +287,7 @@ List * _implicit_alloc_data add_nint(List *L, unsigned long n, ...)
 
 List * _implicit_alloc_data add_str(List *L, char *str)
 {
-	L = add_end(L, malloc(strlen(str)));
+	L = add_last(L, malloc(strlen(str)));
 	strcpy(get_last(L), str);
 
 	return L;
@@ -104,7 +309,7 @@ List * _implicit_alloc_data add_nstr(List *L, unsigned long n, ...)
 
 List * _implicit_alloc_data add_double(List *L, double val)
 {
-	L = add_end(L, malloc(8));
+	L = add_last(L, malloc(8));
 	*(double*)get_last(L) = (double)val;
 
 	return L;
@@ -125,7 +330,7 @@ List * _implicit_alloc_data add_ndouble(List *L, unsigned long n, ...)
 }
 
 
-List *add_begin(List *L, void *data)
+List *add_first(List *L, void *data)
 {
 	Cell *firstCell = create_cell(data);
 	if(!firstCell)
@@ -140,10 +345,10 @@ List *add_begin(List *L, void *data)
 
 
 
-List *add_end(List *L, void *data)
+List *add_last(List *L, void *data)
 {
 	if(!L)
-		return add_begin(L, data);
+		return add_first(L, data);
 	List *p = L;
 	Cell *endCell = create_cell(data);
 	if(!endCell)
@@ -167,11 +372,11 @@ List *add_at(List *L, void *data, unsigned long i)
 	List *pshift;
 	if(i == 0)
 	{
-		return add_begin(L, data);
+		return add_first(L, data);
 	}
 	if(i == len_list(L))
 	{
-		return add_end(L, data);
+		return add_last(L, data);
 	}
 	if(i > len_list(L))
 	{
@@ -196,26 +401,26 @@ List *add_at(List *L, void *data, unsigned long i)
 
 
 
-List *add_nbegin(List *L, unsigned long n, ...)
+List *add_nfirst(List *L, unsigned long n, ...)
 {
 	va_list ptr;
 	va_start(ptr, n);
 	for(unsigned long i = 0; i < n; i++)
 	{
-		L = add_begin(L, va_arg(ptr, void*));
+		L = add_first(L, va_arg(ptr, void*));
 	}
 	va_end(ptr);
 
 	return L;
 }
 
-List *add_nend(List *L, unsigned long n, ...)
+List *add_nlast(List *L, unsigned long n, ...)
 {
 	va_list ptr;
 	va_start(ptr, n);
 	for(unsigned long i = 0; i < n; i++)
 	{
-		L = add_end(L, va_arg(ptr, void*));
+		L = add_last(L, va_arg(ptr, void*));
 	}
 	va_end(ptr);
 
@@ -618,18 +823,18 @@ List *split_chrstr(List *L, char *str, char target)
 	char *ptr = NULL;
 	char *beg = str;
 	unsigned long len = strlen(str);
-	L = add_end(L, str);
+	L = add_last(L, str);
 	while((ptr = strchr(str, target)) && str-beg < len)
 	{
 		str[ptr-str] = 0;
 		str = ptr+1;
-		L = add_end(L, ptr+1);
+		L = add_last(L, ptr+1);
 	}
 
 	return L;
 }
 
-List * _implicit_alloc_data splitd_chrstr(List *L, char *str, char target)
+List * _implicit_alloc_data splitcpy_chrstr(List *L, char *str, char target)
 {
 	char *ptr = NULL;
 	char *beg = str;
@@ -672,13 +877,13 @@ List *split_strstr(List *L, char *str, char *target)
 			break;
 		str[ptr-str] = 0;
 		str = ptr+1;
-		L = add_end(L, ptr+1);
+		L = add_last(L, ptr+1);
 	}
 
 	return L;
 }
 
-List * _implicit_alloc_data splitd_strstr(List *L, char *str, char *target)
+List * _implicit_alloc_data splitcpy_strstr(List *L, char *str, char *target)
 {
 	char *ptr = NULL;
 	char *beg = str, *tmp=0, *tmp2=0;
@@ -741,7 +946,7 @@ List *split_chrstrex(List *L, char *str, char target)
 	return L;
 }
 
-List * _implicit_alloc_data splitd_chrstrex(List *L, char *str, char target)
+List * _implicit_alloc_data splitcpy_chrstrex(List *L, char *str, char target)
 {
 	L = split_chrstr(L, str, target);
 	int i, s, j, k, ok=0;
@@ -799,9 +1004,9 @@ List *split_strstrex(List *L, char *str, char *target)
 	return L;
 }
 
-List * _implicit_alloc_data splitd_strstrex(List *L, char *str, char *target)
+List * _implicit_alloc_data splitcpy_strstrex(List *L, char *str, char *target)
 {
-	L = splitd_strstr(L, str, target);
+	L = splitcpy_strstr(L, str, target);
 	int i, s, j, k, ok=0;
 	s = len_list(L);
 	for(i = 0; i < s; i++)
