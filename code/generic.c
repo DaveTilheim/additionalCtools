@@ -19,7 +19,7 @@ void gswap(void *p1, void *p2, const size_t nbytes)
 		perror("\033[96mvoid gswap(void *p1, void *p2, const size_t nbytes)\033[0m ");
 		return;
 	}
-	int i;
+	unsigned i;
 	for(i = 0; i < nbytes; i++)
 	{
 		tmp[i] = *(char*)(p1+i);
@@ -31,7 +31,7 @@ void gswap(void *p1, void *p2, const size_t nbytes)
 
 static void _heap_gswap(void *p1, void *p2, const size_t nbytes, char *tmp)
 {
-	int i;
+	unsigned i;
 	for(i = 0; i < nbytes; i++)
 	{
 		tmp[i] = *(char*)(p1+i);

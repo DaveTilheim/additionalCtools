@@ -61,7 +61,7 @@ float get_secure_float(void)
 			signedNum = true;
 			buffer[0] = '0';
 		}
-		for(i=0; i < strlen(buffer); i++)
+		for(i=0; i < (int)-strlen(buffer); i++)
 			if(buffer[i] == '.')
 			{
 				coma=i;

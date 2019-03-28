@@ -7,12 +7,6 @@
 typedef struct List_t List, *pList;
 typedef struct List_t Cell;
 
-List *(*push)(List *, void*);
-List *(*pushn)(List *, unsigned long, ...);
-List *(*append)(List *, void*);
-List *(*appendn)(List *, unsigned long, ...);
-List *(*pop)(List *);
-List *(*popd)(List *);
 
 unsigned long len_list(List*);
 List *empty_list();
@@ -80,6 +74,6 @@ void list_heapsort_b(List *, int (^)(const void*,const void*));
 int list_dsearch(List *, const void *, int (*)(const void *, const void *));
 int list_dsearch_b(List *, const void *, int (^)(const void *, const void *));
 void mix_list(List *L);
-
+List *_implicit_alloc_data copy_list(List *, size_t);
 
 #endif

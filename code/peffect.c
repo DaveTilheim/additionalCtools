@@ -43,7 +43,7 @@ void print_bin(const size_t nbytes, const void* data)
 
 void print_bini(const size_t nbits, const int data)
 {
-	int i;
+	unsigned i;
 	for(i = 0; i < nbits; i++)
 	{
 		printf("%d", (data>>(nbits-i-1))&1);

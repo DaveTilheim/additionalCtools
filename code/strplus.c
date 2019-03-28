@@ -99,7 +99,7 @@ void replace_str(char *str, char *target, char *newStr)
 		{
 			if(targetLen < newStrLen)
 			{
-				for(i = strLen-1+(newStrLen-targetLen); i >= ptrRemp-str+(newStrLen-targetLen); i--)
+				for(i = strLen-1+(newStrLen-targetLen); i >= (int)(ptrRemp-str+(newStrLen-targetLen)); i--)
 				{
 					str[i] = str[i-(newStrLen-targetLen)];
 				}
@@ -109,7 +109,7 @@ void replace_str(char *str, char *target, char *newStr)
 			else
 			{
 				stpncpy(ptrRemp, newStr, newStrLen);
-				for(i = ptrRemp-str+newStrLen; i < strLen; i++)
+				for(i = ptrRemp-str+newStrLen; i < (int)strLen; i++)
 				{
 					str[i] = str[i+(targetLen-newStrLen)];
 				}
