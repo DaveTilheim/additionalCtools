@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdarg.h>
 #include <unistd.h>
 #include "peffect.h"
 
@@ -70,6 +71,33 @@ void print_bind(const double data)
 	{
 		printf("%ld", (*dt>>(64-i-1))&1);
 	}
+	printf("\n");
+}
+
+static void print_limit_box(const int);
+static void print_str_middle_box(const char *);
+
+static void print_limit_box(const int limit)
+{
+	printf("+--");
+	for(int i=0;i<limit;i++) printf("-");
+	printf("--+");
+}
+
+
+static void print_str_middle_box(const char *msg)
+{
+	printf("|  %s  |", msg);
+}
+
+
+void print_box(const char *msg)
+{
+	print_limit_box(strlen(msg));
+	printf("\n");
+	print_str_middle_box(msg);
+	printf("\n");
+	print_limit_box(strlen(msg));
 	printf("\n");
 }
 

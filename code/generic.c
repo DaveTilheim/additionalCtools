@@ -44,14 +44,12 @@ static void gpatern(void *ptr, const unsigned long nelem, const size_t mpe, unsi
 {
 	unsigned long ison1 = ifather*2+1;
 	unsigned long ison2 = ison1+1;
-	
 	while(ison1 < nelem)
 	{
 		if(ison2 < nelem && gcompare(ptr+(ison2*mpe), ptr+(ison1*mpe)) > 0)
 		{
 			ison1 = ison2;
 		}
-
 		if(gcompare(ptr+(ison1*mpe), ptr+(ifather*mpe)) > 0)
 		{
 			_heap_gswap(ptr+(ison1*mpe), ptr+(ifather*mpe), mpe, tmp);
@@ -199,6 +197,21 @@ int gdsearch_b(const void *vec, const void *target, const int nbel, const size_t
 }
 
 
+void __gprint(void *data, char *typeName)
+{
+	if(!strcmp(typeName, "char")) printf("%hhd\n", *(char*)data);
+	 else if(!strcmp(typeName, "unsigned char")) printf("%hhu\n", *(unsigned char*)data);
+	 else if(!strcmp(typeName, "short")) printf("%hd\n", *(short*)data);
+	 else if(!strcmp(typeName, "unsigned short")) printf("%hu\n", *(unsigned short*)data);
+	 else if(!strcmp(typeName, "int")) printf("%d\n", *(int*)data);
+	 else if(!strcmp(typeName, "unsigned")) printf("%u\n", *(unsigned*)data);
+	 else if(!strcmp(typeName, "long")) printf("%ld\n", *(long*)data);
+	 else if(!strcmp(typeName, "unsigned long")) printf("%lu\n", *(unsigned long*)data);
+	 else if(!strcmp(typeName, "float")) printf("%f\n", *(float*)data);
+	 else if(!strcmp(typeName, "double")) printf("%lf\n", *(double*)data);
+	 else if(!strcmp(typeName, "char *")) printf("%s\n", (char*)data);
+	 else printf("%p\n", *(char**)data);
+}
 
 
 

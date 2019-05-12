@@ -19,6 +19,9 @@ void print_bini(const size_t, const int);
 void print_binf(const float);
 void print_bind(const double);
 
+void print_box(const char *);
+
+
 typedef enum
 {
 	BOLD=1,

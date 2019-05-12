@@ -4,12 +4,21 @@
 #define _implicit_alloc_data
 #define _implicit_free_data
 
+#ifdef MEMORY_VIEW_DEBUG
+void viewMemWatches(void);
+#endif
+struct List_t
+{
+	void *data;
+	struct List_t *next;
+};
 typedef struct List_t List, *pList;
 typedef struct List_t Cell;
 
 
 unsigned long len_list(List*);
-List *empty_list();
+int is_empty_list(List *);
+List *empty_list(void);
 List *new_list(unsigned long, ...);
 List *add_first(List *, void*);
 List *add_last(List *, void*);
@@ -53,6 +62,10 @@ List *_implicit_free_data freed_first(List *);
 List *_implicit_free_data freed_last(List *);
 List *_implicit_free_data freed_at(List *, unsigned long);
 List *_implicit_free_data freed_list(List *);
+List *_implicit_free_data freed_gen_first(List*, void(*)(void*));
+List *_implicit_free_data freed_gen_last(List *, void(*)(void*));
+List *_implicit_free_data freed_gen_at(List *, unsigned long, void(*)(void*));
+List *_implicit_free_data freed_gen_list(List *, void(*)(void*));
 List *attach(List*, List*);
 unsigned printl(List *, void (*)(const void *));
 unsigned printl_b(List *, void (^)(const void *));
@@ -75,5 +88,12 @@ int list_dsearch(List *, const void *, int (*)(const void *, const void *));
 int list_dsearch_b(List *, const void *, int (^)(const void *, const void *));
 void mix_list(List *L);
 List *_implicit_alloc_data copy_list(List *, size_t);
+List *insert(List *, void *, int (*)(const void*,const void*));
+List *_implicit_alloc_data insertd(List *, void *, size_t, int (*)(const void*,const void*));
+List *insertn(List *, int (*)(const void*,const void*), unsigned long, ...);
+List *_implicit_alloc_data insertdn(List *, size_t, int (*)(const void*,const void*), unsigned long, ...);
+void list_tofile_bin_static(List *, char *, size_t);
+void list_tofile_with_method_bin_static(List *, char *, void (*)(const void *, FILE *));
+List *_implicit_alloc_data new_list_fromfile_bin_static(char *, size_t);
 
 #endif

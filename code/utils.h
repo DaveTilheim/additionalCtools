@@ -8,6 +8,9 @@
 #include "fileplus.h"
 #include "generic.h"
 #include "randomplus.h"
+#include "garbagec.h"
+#include "dictionnary.h"
+
 
 #define manual() system("gcc -E utils.h")
 

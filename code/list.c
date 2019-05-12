@@ -4,13 +4,43 @@
 #include <string.h>
 #include "list.h"
 
-struct List_t
+#ifdef MEMORY_VIEW_DEBUG
+static int mallocWatchCounter = 0;
+static int freeWatchCounter = 0;
+static int mallocCellsWatchCounter = 0;
+static int freeCellsWatchCounter = 0;
+static int mallocDataWatchCounter = 0;
+static int freeDataWatchCounter = 0;
+void viewMemWatches(void)
 {
-	void *data;
-	struct List_t *next;
-};
+	mallocWatchCounter=mallocDataWatchCounter+mallocCellsWatchCounter;
+	freeWatchCounter=freeDataWatchCounter+freeCellsWatchCounter;
+	printf("\n/———————————————————*******———————————————————\\\n");
+	printf("[\033[94mAllocation\033[0m]\n");
+	printf("\033[94mAllocated\033[0m cells: \033[96m%d\033[0m\n", mallocCellsWatchCounter);
+	printf("Data \033[94mallocated\033[0m: \033[96m%d\033[0m\n", mallocDataWatchCounter);
+	printf("Total \033[94mallocated\033[0m: \033[96m%d\033[0m\n\n", mallocWatchCounter);
+	printf("[\033[95mRelease\033[0m]\n");
+	printf("\033[95mReleased\033[0m cells: \033[96m%d\033[0m\n", freeCellsWatchCounter);
+	printf("Data \033[95mreleased\033[0m: \033[96m%d\033[0m\n", freeDataWatchCounter);
+	printf("Total \033[95mreleased\033[0m: \033[96m%d\033[0m\n\n", freeWatchCounter);
+	printf("[Result]\n");
+	printf("\033[96m%d\033[0m \033[94mmalloc\033[0m => \033[96m%d\033[0m \033[95mfree\033[0m\n", mallocWatchCounter, freeWatchCounter);
+	printf("%s%d\033[0m lost free (%s uses)\n", 
+		mallocWatchCounter==freeWatchCounter?"\033[96m":"\033[91m",
+		mallocWatchCounter-freeWatchCounter, 
+		mallocWatchCounter!=freeWatchCounter?"potentially \033[91mbad\033[0m":"\033[96mgood\033[0m");
+	printf("\n/———————————————————*******———————————————————\\\n");
+}
+#endif
+
 
 static Cell *create_cell(void *);
+
+int is_empty_list(List *L)
+{
+	return L == NULL;
+}
 
 List *new_list(unsigned long n, ...)
 {
@@ -46,6 +76,10 @@ List * _implicit_alloc_data new_listcpy(size_t nbytes, unsigned long n, ...)
 
 List * _implicit_alloc_data add_cpyfirst(List *L, size_t nbytes, void* data)
 {
+	#ifdef MEMORY_VIEW_DEBUG
+	printf("add_cpyfirst -> malloc data... (list[%p] -> [%zuB])\n", L, nbytes);
+	mallocDataWatchCounter++;
+	#endif
 	Cell *firstCell = create_cell(malloc(nbytes));
 	if(!firstCell)
 	{
@@ -62,6 +96,10 @@ List * _implicit_alloc_data add_cpylast(List *L, size_t nbytes, void* data)
 	if(!L)
 		return add_cpyfirst(L, nbytes, data);
 	List *p = L;
+	#ifdef MEMORY_VIEW_DEBUG
+	printf("add_cpylast -> malloc data... (list[%p] -> [%zuB])\n", L, nbytes);
+	mallocDataWatchCounter++;
+	#endif
 	Cell *endCell = create_cell(malloc(nbytes));
 	if(!endCell)
 	{
@@ -99,6 +137,10 @@ List * _implicit_alloc_data add_cpyat(List *L, size_t nbytes, void* data, unsign
 	{
 		cur = cur->next;
 	}
+	#ifdef MEMORY_VIEW_DEBUG
+	printf("add_cpyat -> malloc data...\n");
+	mallocDataWatchCounter++;
+	#endif
 	Cell *cell = create_cell(malloc(nbytes));
 	if(!cell)
 	{
@@ -192,7 +234,14 @@ void _implicit_alloc_data set_cpyat(List *L, size_t nbytes, unsigned long i, voi
 
 void _implicit_alloc_data _implicit_free_data setd_cpyfirst(List *L, size_t nbytes, void *data)
 {
+	#ifdef MEMORY_VIEW_DEBUG
+	printf("setd_cpyfirst -> free data...\n");
+	freeDataWatchCounter++;
+	printf("setd_cpyfirst -> malloc data... (list[%p] -> [%zuB])\n", L, nbytes);
+	mallocDataWatchCounter++;
+	#endif
 	free(L->data);
+	L->data = malloc(nbytes);
 	memcpy(L->data, data, nbytes);
 }
 
@@ -205,6 +254,13 @@ void _implicit_alloc_data _implicit_free_data setd_cpylast(List *L, size_t nbyte
 		L = L->next;
 	}
 	free(L->data);
+	#ifdef MEMORY_VIEW_DEBUG
+	printf("setd_cpylast -> free data...\n");
+	freeDataWatchCounter++;
+	printf("setd_cpylast -> malloc data... (list[%p] -> [%zuB])\n", L, nbytes);
+	mallocDataWatchCounter++;
+	#endif
+	L->data = malloc(nbytes);
 	memcpy(L->data, data, nbytes);
 }
 
@@ -228,11 +284,18 @@ void _implicit_alloc_data _implicit_free_data setd_cpyat(List *L, size_t nbytes,
 	{
 		L = L->next;
 	}
+	#ifdef MEMORY_VIEW_DEBUG
+	printf("setd_cpyat -> free data...\n");
+	freeDataWatchCounter++;
+	printf("setd_cpyat -> malloc data... (list[%p] -> [%zuB])\n", L, nbytes);
+	mallocDataWatchCounter++;
+	#endif
 	free(L->data);
+	L->data = malloc(nbytes);
 	memcpy(L->data, data, nbytes);
 }
 
-List *empty_list()
+List *empty_list(void)
 {
 	return NULL;
 }
@@ -250,6 +313,10 @@ unsigned long len_list(List* L)
 
 static Cell *create_cell(void *data)
 {
+	#ifdef MEMORY_VIEW_DEBUG
+	printf("create_cell -> malloc cell...\n");
+	mallocCellsWatchCounter++;
+	#endif
 	Cell *cell = (Cell*)malloc(sizeof(Cell));
 	if(!cell)
 	{
@@ -264,6 +331,10 @@ static Cell *create_cell(void *data)
 
 List * _implicit_alloc_data add_int(List *L, long val)
 {
+	#ifdef MEMORY_VIEW_DEBUG
+	printf("add_int -> malloc data... (list[%p] -> [8B] -> {%ld})\n", L, val);
+	mallocDataWatchCounter++;
+	#endif
 	L = add_last(L, malloc(8));
 	*(long*)get_last(L) = (long)val;
 
@@ -286,7 +357,11 @@ List * _implicit_alloc_data add_nint(List *L, unsigned long n, ...)
 
 List * _implicit_alloc_data add_str(List *L, char *str)
 {
-	L = add_last(L, malloc(strlen(str)));
+	#ifdef MEMORY_VIEW_DEBUG
+	printf("add_str -> malloc data... (list[%p] -> [%uB] -> {%s})\n", L, (unsigned)(strlen(str)+1),str);
+	mallocDataWatchCounter++;
+	#endif
+	L = add_last(L, malloc(strlen(str)+1));
 	strcpy(get_last(L), str);
 
 	return L;
@@ -308,6 +383,10 @@ List * _implicit_alloc_data add_nstr(List *L, unsigned long n, ...)
 
 List * _implicit_alloc_data add_double(List *L, double val)
 {
+	#ifdef MEMORY_VIEW_DEBUG
+	printf("add_double -> malloc data... (list[%p] -> [8B] -> {%lf})\n", L, val);
+	mallocDataWatchCounter++;
+	#endif
 	L = add_last(L, malloc(8));
 	*(double*)get_last(L) = (double)val;
 
@@ -446,6 +525,10 @@ void set_first(List *L, void *data)
 
 void _implicit_free_data setd_first(List *L, void *data)
 {
+	#ifdef MEMORY_VIEW_DEBUG
+	printf("setd_first -> free data...\n");
+	freeDataWatchCounter++;
+	#endif
 	free(L->data);
 	L->data = data;
 }
@@ -469,6 +552,10 @@ void _implicit_free_data setd_last(List *L, void *data)
 	{
 		L = L->next;
 	}
+	#ifdef MEMORY_VIEW_DEBUG
+	printf("setd_last -> free data...\n");
+	freeDataWatchCounter++;
+	#endif
 	free(L->data);
 	L->data = data;
 }
@@ -518,6 +605,10 @@ void _implicit_free_data setd_at(List *L, unsigned long i, void *data)
 	{
 		L = L->next;
 	}
+	#ifdef MEMORY_VIEW_DEBUG
+	printf("setd_at -> free data...\n");
+	freeDataWatchCounter++;
+	#endif
 	free(L->data);
 	L->data = data;
 }
@@ -571,6 +662,10 @@ List *free_first(List* L)
 	if(!L)
 		return NULL;
 	List *p = L->next;
+	#ifdef MEMORY_VIEW_DEBUG
+	printf("free_first -> free cell...\n");
+	freeCellsWatchCounter++;
+	#endif
 	free(L);
 
 	return p;
@@ -587,6 +682,10 @@ List *free_last(List *L)
 		prec = p;
 		p = p->next;
 	}
+	#ifdef MEMORY_VIEW_DEBUG
+	printf("free_last -> free cell...\n");
+	freeCellsWatchCounter++;
+	#endif
 	free(p);
 	prec->next = NULL;
 
@@ -616,6 +715,10 @@ List *free_at(List *L, unsigned long i)
 		p = p->next;
 		next = p->next;
 	}
+	#ifdef MEMORY_VIEW_DEBUG
+	printf("free_at -> free cell...\n");
+	freeCellsWatchCounter++;
+	#endif
 	free(p);
 	prec->next = next;
 
@@ -628,7 +731,34 @@ List * _implicit_free_data freed_first(List* L)
 	if(!L)
 		return NULL;
 	List *p = L->next;
+	#ifdef MEMORY_VIEW_DEBUG
+	printf("freed_first -> free cell...\n");
+	freeCellsWatchCounter++;
+	#endif
 	free(L->data);
+	#ifdef MEMORY_VIEW_DEBUG
+	printf("freed_first -> free data...\n");
+	freeDataWatchCounter++;
+	#endif
+	free(L);
+
+	return p;
+}
+
+List * _implicit_free_data freed_gen_first(List* L, void(*gfree)(void*))
+{
+	if(!L)
+		return NULL;
+	List *p = L->next;
+	#ifdef MEMORY_VIEW_DEBUG
+	printf("freed_first -> free cell...\n");
+	freeCellsWatchCounter++;
+	#endif
+	gfree(L->data);
+	#ifdef MEMORY_VIEW_DEBUG
+	printf("freed_first -> free data...\n");
+	freeDataWatchCounter++;
+	#endif
 	free(L);
 
 	return p;
@@ -645,7 +775,42 @@ List * _implicit_free_data freed_last(List *L)
 		prec = p;
 		p = p->next;
 	}
+	#ifdef MEMORY_VIEW_DEBUG
+	printf("freed_last -> free data...\n");
+	freeDataWatchCounter++;
+	#endif
 	free(p->data);
+	#ifdef MEMORY_VIEW_DEBUG
+	printf("freed_last -> free cell...\n");
+	freeCellsWatchCounter++;
+	#endif
+	free(p);
+	prec->next = NULL;
+
+	return L;
+}
+
+
+List * _implicit_free_data freed_gen_last(List *L, void(*gfree)(void*))
+{
+	if(!L)
+		return NULL;
+	List *p = L;
+	List *prec;
+	while(p->next)
+	{
+		prec = p;
+		p = p->next;
+	}
+	#ifdef MEMORY_VIEW_DEBUG
+	printf("freed_last -> free data...\n");
+	freeDataWatchCounter++;
+	#endif
+	gfree(p->data);
+	#ifdef MEMORY_VIEW_DEBUG
+	printf("freed_last -> free cell...\n");
+	freeCellsWatchCounter++;
+	#endif
 	free(p);
 	prec->next = NULL;
 
@@ -675,7 +840,53 @@ List * _implicit_free_data freed_at(List *L, unsigned long i)
 		p = p->next;
 		next = p->next;
 	}
+	#ifdef MEMORY_VIEW_DEBUG
+	printf("freed_at -> free data...\n");
+	freeDataWatchCounter++;
+	#endif
 	free(p->data);
+	#ifdef MEMORY_VIEW_DEBUG
+	printf("freed_at -> free cell...\n");
+	freeCellsWatchCounter++;
+	#endif
+	free(p);
+	prec->next = next;
+
+	return L;
+}
+
+List * _implicit_free_data freed_gen_at(List *L, unsigned long i, void(*gfree)(void*))
+{
+	int j;
+	List *prec, *next, *p=L;
+	if(i == 0)
+	{
+		return freed_gen_first(L, gfree);
+	}
+	if(i == len_list(L)-1)
+	{
+		return freed_gen_last(L, gfree);
+	}
+	if(i >= len_list(L))
+	{
+		fprintf(stderr, "\033[91mlist index out of band error: %lu > %lu\033[0m\n", i, len_list(L)-1);
+		return L;
+	}
+	for(j = 0; j < (int)i; j++)
+	{
+		prec = p;
+		p = p->next;
+		next = p->next;
+	}
+	#ifdef MEMORY_VIEW_DEBUG
+	printf("freed_at -> free data...\n");
+	freeDataWatchCounter++;
+	#endif
+	gfree(p->data);
+	#ifdef MEMORY_VIEW_DEBUG
+	printf("freed_at -> free cell...\n");
+	freeCellsWatchCounter++;
+	#endif
 	free(p);
 	prec->next = next;
 
@@ -703,7 +914,29 @@ List * _implicit_free_data freed_list(List* L)
 	}
 	while(L)
 	{
+		#ifdef MEMORY_VIEW_DEBUG
+		printf("freed_list -> free data...\n");
+		freeDataWatchCounter++;
+		#endif
 		free(L->data);
+		L = free_first(L);
+	}
+	return NULL;
+}
+
+List * _implicit_free_data freed_gen_list(List* L, void (*gfree)(void *))
+{
+	if(!L)
+	{
+		return NULL;
+	}
+	while(L)
+	{
+		#ifdef MEMORY_VIEW_DEBUG
+		printf("freed_list -> free data...\n");
+		freeDataWatchCounter++;
+		#endif
+		gfree(L->data);
 		L = free_first(L);
 	}
 	return NULL;
@@ -717,7 +950,7 @@ unsigned long printl_str(List* L)
 	unsigned long size = len_list(L);
 	for(int i = 0; i < (int)size; i++)
 	{
-		printf("%s\n", get_at(L, i));
+		printf("%d> %s\n", i, get_at(L, i));
 	}
 	printf("\n");
 
@@ -944,7 +1177,7 @@ List *split_chrstrex(List *L, char *str, char target)
 
 List * _implicit_alloc_data splitcpy_chrstrex(List *L, char *str, char target)
 {
-	L = split_chrstr(L, str, target);
+	L = splitcpy_chrstr(L, str, target);
 	int i, s, j, k, ok=0;
 	s = len_list(L);
 	for(i = 0; i < s; i++)
@@ -963,7 +1196,7 @@ List * _implicit_alloc_data splitcpy_chrstrex(List *L, char *str, char target)
 		}
 		if(!ok)
 		{
-			L = free_at(L, i--);
+			L = freed_at(L, i--);
 			s = len_list(L);
 		}
 	}
@@ -1019,7 +1252,7 @@ List * _implicit_alloc_data splitcpy_strstrex(List *L, char *str, char *target)
 		}
 		if(!ok)
 		{
-			L = free_at(L, i--);
+			L = freed_at(L, i--);
 			s = len_list(L);
 		}
 	}
@@ -1191,19 +1424,143 @@ void mix_list(List *L)
 
 List *_implicit_alloc_data copy_list(List *L, size_t dataSize)
 {
-    List *newList = empty_list();
-    long len = len_list(L);
-    if(L)
-    {
-        for(int i=0; i< len; i++)
-        {
-            newList = add_cpylast(newList, dataSize, L->data);
-            L = L->next;
-        }
-    }
-    
-    return newList;
+	List *newList = empty_list();
+	long len = len_list(L);
+	if(L)
+	{
+		for(long i=0; i < len; i++)
+		{
+			newList = add_cpylast(newList, dataSize, L->data);
+			L = L->next;
+		}
+	}
+	
+	return newList;
 }
+
+
+List *insert(List *L, void *data, int (*gcmp)(const void*,const void*))
+{
+	List *temp = L;
+	List *prec = L;
+	if(!L)
+	{
+		return create_cell(data);
+	}
+	if(gcmp(data, L->data) < 0)
+	{
+		return add_first(L, data);
+	}
+	while(temp && gcmp(data, temp->data) > 0)
+	{
+		prec = temp;
+		temp = temp->next;
+	}
+	prec->next = create_cell(data);
+	prec->next->next = temp;
+
+	return L;
+}
+
+List *insertd(List *L, void *data, size_t size, int (*gcmp)(const void*,const void*))
+{
+	List *temp = L;
+	List *prec = L;
+	if(!L)
+	{
+		return add_cpyfirst(L, size, data);
+	}
+	if(gcmp(data, L->data) < 0)
+	{
+		return add_cpyfirst(L, size, data);
+	}
+	while(temp && gcmp(data, temp->data) > 0)
+	{
+		prec = temp;
+		temp = temp->next;
+	}
+	prec->next = add_cpyfirst(prec->next, size, data);
+	prec->next->next = temp;
+
+	return L;
+}
+
+List *insertn(List *L, int (*gcmp)(const void*,const void*), unsigned long n, ...)
+{
+	va_list ptr;
+	va_start(ptr, n);
+	for(unsigned long i = 0; i < n; i++)
+	{
+		L = insert(L, va_arg(ptr, void*), gcmp);
+	}
+	va_end(ptr);
+
+	return L;
+}
+
+List *_implicit_alloc_data insertdn(List *L, size_t size, int (*gcmp)(const void*,const void*), unsigned long n, ...)
+{
+	va_list ptr;
+	va_start(ptr, n);
+	for(unsigned long i = 0; i < n; i++)
+	{
+		L = insertd(L, va_arg(ptr, void*), size, gcmp);
+	}
+	va_end(ptr);
+
+	return L;
+}
+
+
+void list_tofile_bin_static(List *list, char *filename, size_t size)
+{
+	FILE *fp = fopen(filename, "wb");
+	if(!fp)
+		return;
+	while(list)
+	{
+		fwrite(list->data, size, 1, fp);
+		list = list->next;
+	}
+	fclose(fp);
+}
+
+void list_tofile_with_method_bin_static(List *list, char *filename, void (*data_to_file_method)(const void *, FILE *))
+{
+	FILE *fp = fopen(filename, "wb");
+	if(!fp)
+		return;
+	while(list)
+	{
+		data_to_file_method(list->data, fp);
+		list = list->next;
+	}
+	fclose(fp);
+}
+
+List *new_list_fromfile_bin_static(char *filename, size_t size)
+{
+	List *list = NULL;
+	FILE *fp = fopen(filename, "rb");
+	void *data = NULL;
+	if(!fp)
+		return NULL;
+	data = malloc(size);
+	if(!data)
+	{
+		fclose(fp);
+		return NULL;
+	}
+	while(fread(data, size, 1, fp) == 1)
+	{
+		list = add_cpylast(list, size, data);
+	}
+	free(data);
+	fclose(fp);
+
+	return list;
+}
+
 
 
 
